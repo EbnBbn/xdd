@@ -35,14 +35,8 @@ int* fnullcol(int** matrix, int rows, int cols, int& nullct) {
     return nullcol;
 }
 
-int** removeCols(int** matrix, int rows, int& cols, int* nullcol, int nullct) {
-    if (nullct == 0) return matrix;
-    int ncols = cols - nullct;
-    
-    int** newmx = new int* [rows];
-    for (int i = 0; i < rows; i++) {
-        newmx[i] = new int[ncols];
-    }
+void removeCols(int** matrix, int rows, int& cols, int* nullcol, int nullct) {
+    if (nullct == 0) return;
 
     for (int i = 0; i < rows; i++) {
         int nj = 0;
@@ -55,19 +49,24 @@ int** removeCols(int** matrix, int rows, int& cols, int* nullcol, int nullct) {
                 }
             }
             if (skip == 0) {
-                newmx[i][nj] = matrix[i][j];
+                matrix[i][nj] = matrix[i][j];
                 nj++;
             }
         }
+        for (int j = nj; j < cols; j++) {
+            matrix[i][j] = 0;
+        }
     }
 
+    int ncols = cols - nullct;
     for (int i = 0; i < rows; i++) {
-        delete[] matrix[i];
+        int* nrow = (int*)realloc(matrix[i], ncols * sizeof(int));
+        if (nrow) {
+            matrix[i] = nrow;
+        }
     }
-    delete[] matrix;
 
     cols = ncols;
-    return newmx;
 }
 
 int main()
@@ -90,18 +89,19 @@ int main()
     cin >>  C >> D;
     cout << endl;
 
-    int** pmatrix = new int* [rows];
+    int** matrix = (int**)malloc(rows * sizeof(int*));
     for (int i = 0; i < rows; i++) {
-        pmatrix[i] = new int[cols];
+        matrix[i] = (int*)malloc(cols * sizeof(int));
     }
-    pmatrix[0][0] = A;
-    pmatrix[0][1] = B;
-    pmatrix[1][0] = C;
-    pmatrix[1][1] = D;
+
+    matrix[0][0] = A;
+    matrix[0][1] = B;
+    matrix[1][0] = C;
+    matrix[1][1] = D;
 
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            cout << pmatrix[i][j] << " ";
+            cout << matrix[i][j] << " ";
         }
         cout << endl;
     }
@@ -110,14 +110,19 @@ int main()
     rows += A;
     cols += B;
 
-    int** matrix = new int* [rows];
-    for (int i = 0; i < rows; i++) {
-        matrix[i] = new int[cols];
+    matrix = (int**)realloc(matrix, rows * sizeof(int*));
+    for (int i = 2; i < rows; i++) {
+        matrix[i] = (int*)malloc(cols * sizeof(int));
     }
-    for (int i = 0; i < rows;i++) {
+
+    for (int i = 0; i < rows; i++) {
+        matrix[i] = (int*)realloc(matrix[i], cols * sizeof(int));
+    }
+
+    for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            if (i <= 1 && j <= 1) {
-                matrix[i][j] = pmatrix[i][j];
+            if (i < 2 && j < 2) {
+                matrix[i][j] = matrix[i][j];
             }
             else {
                 matrix[i][j] = (i - 1) * C + (j - 1) * D;
@@ -144,26 +149,23 @@ int main()
     }
     cout << endl;
 
-    int** fmatrix = removeCols(matrix, rows, cols, nullcol, nullct);
+    removeCols(matrix, rows, cols, nullcol, nullct);
 
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            cout << fmatrix[i][j] << " ";
+            cout << matrix[i][j] << " ";
         }
         cout << endl;
     }
 
-    for (int i = 0; i < 2; i++) {
-        delete[] pmatrix[i];
-    }
-    delete[] pmatrix;
-
     for (int i = 0; i < rows; i++) {
-        delete[] fmatrix[i];
+        free(matrix[i]);
     }
-    delete[] fmatrix;
-
+    free(matrix);
     free(nullcol);
+
+    
+
 
     //пункт 2
     double a, b;
